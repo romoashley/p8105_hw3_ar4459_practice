@@ -54,5 +54,38 @@ brfss_df = brfss_smart2010 |>
 
 
 
+## Problem 3
+
+First, load the data
+
+```{r}
+accel_df = read_csv("data/nhanes_accel.csv") |> 
+  janitor::clean_names() |> 
+  pivot_longer(
+    min1:min1440, 
+    names_to = "min",
+    values_to = "phys_act"
+  )
+
+
+covar_df = read_csv("data/nhanes_covar.csv", skip = 4) |> 
+  janitor::clean_names() |> 
+  mutate(
+     sex = case_match(
+       sex,
+        1 ~ "male",
+       2 ~ "female"
+     ),
+     education = case_match(
+        education,
+       1 ~ "Less than high school",
+       2 ~ "High school equivalent",
+       3 ~ "More than high school"
+     )
+  ) |> 
+  filter( age >= "21", bmi != "NA", education != "NA", sex != "NA")
+
+```
+
 
 

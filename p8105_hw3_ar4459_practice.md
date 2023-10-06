@@ -57,3 +57,52 @@ brfss_df = brfss_smart2010 |>
   select( year, loc_abbr = locationabbr, loc_des = locationdesc, everything()) |> 
   filter(response == "Excellent" | response == "Poor")
 ```
+
+## Problem 3
+
+First, load the data
+
+``` r
+accel_df = read_csv("data/nhanes_accel.csv") |> 
+  janitor::clean_names() |> 
+  pivot_longer(
+    min1:min1440, 
+    names_to = "min",
+    values_to = "phys_act"
+  )
+```
+
+    ## Rows: 250 Columns: 1441
+    ## ── Column specification ────────────────────────────────────────────────────────
+    ## Delimiter: ","
+    ## dbl (1441): SEQN, min1, min2, min3, min4, min5, min6, min7, min8, min9, min1...
+    ## 
+    ## ℹ Use `spec()` to retrieve the full column specification for this data.
+    ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+
+``` r
+covar_df = read_csv("data/nhanes_covar.csv", skip = 4) |> 
+  janitor::clean_names() |> 
+  mutate(
+     sex = case_match(
+       sex,
+        1 ~ "male",
+       2 ~ "female"
+     ),
+     education = case_match(
+        education,
+       1 ~ "Less than high school",
+       2 ~ "High school equivalent",
+       3 ~ "More than high school"
+     )
+  ) |> 
+  filter( age >= "21", bmi != "NA", education != "NA", sex != "NA")
+```
+
+    ## Rows: 250 Columns: 5
+    ## ── Column specification ────────────────────────────────────────────────────────
+    ## Delimiter: ","
+    ## dbl (5): SEQN, sex, age, BMI, education
+    ## 
+    ## ℹ Use `spec()` to retrieve the full column specification for this data.
+    ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
