@@ -106,3 +106,9 @@ covar_df = read_csv("data/nhanes_covar.csv", skip = 4) |>
     ## 
     ## ℹ Use `spec()` to retrieve the full column specification for this data.
     ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+
+Now, we merge the two datasets.
+
+``` r
+merged_df = full_join(accel_df, covar_df, by =  "seqn")
+```

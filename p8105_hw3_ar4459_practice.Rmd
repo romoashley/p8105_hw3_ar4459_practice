@@ -87,5 +87,11 @@ covar_df = read_csv("data/nhanes_covar.csv", skip = 4) |>
 
 ```
 
+Now, we merge the two datasets. 
+
+```{r}
+merged_df = full_join(accel_df, covar_df, by =  "seqn")
+```
+
 
 
