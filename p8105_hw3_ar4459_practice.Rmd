@@ -1,5 +1,5 @@
 ---
-title: "p8105_hw3_ar4459_practice"
+title: "P8105 HOMEWORK 3"
 author: "ASHLEY ROMO"
 date: "2023-10-05"
 output: github_document
@@ -21,8 +21,6 @@ instacart_df = instacart
 aisles_df = instacart_df |> 
   select(order_id, aisle_id, aisle) 
   
-
-
 ```
 
 
@@ -43,10 +41,13 @@ data("brfss_smart2010")
 Now, I will do some data cleaning
 
 ```{r}
-brfss_df = brfss_smart2010 |> 
+brfss_df = 
+  brfss_smart2010 |> 
   janitor::clean_names() |> 
   select( year, loc_abbr = locationabbr, loc_des = locationdesc, everything()) |> 
-  filter(response == "Excellent" | response == "Poor")
+  filter(response == "Excellent" | response == "Poor") |> 
+  mutate(response=factor(response, levels = c("Poor", "Excellent")))
+
 ```
 
 
@@ -63,6 +64,7 @@ accel_df = read_csv("data/nhanes_accel.csv") |>
   janitor::clean_names() |> 
   pivot_longer(
     min1:min1440, 
+    names_prefix = "min",
     names_to = "min",
     values_to = "phys_act"
   )
@@ -83,7 +85,8 @@ covar_df = read_csv("data/nhanes_covar.csv", skip = 4) |>
        3 ~ "More than high school"
      )
   ) |> 
-  filter( age >= "21", bmi != "NA", education != "NA", sex != "NA")
+  filter( age >= "21") |> 
+  drop_na()
 
 ```
 
