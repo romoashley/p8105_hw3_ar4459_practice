@@ -206,7 +206,7 @@ val_2006 =
 val_2006
 
 val_2010 =
-   brfss_df |> 
+  brfss_df |> 
   filter(year == 2010, state == "NY") |> 
   group_by(data_value, response) |> 
   ggplot(aes(x = response, y = data_value, color = county)) +
@@ -269,5 +269,52 @@ Now, we merge the two datasets.
 merged_df = full_join(accel_df, covar_df, by =  "seqn")
 ```
 
+Tables for men and women
 
+```{r}
+
+
+#table
+sex_df = 
+  merged_df |>
+  group_by(sex, education) |> 
+  summarize(n_obs = n()) |> 
+  pivot_wider(
+    names_from = education,
+    values_from = n_obs
+  ) |> 
+  knitr::kable()
+
+#visualization
+
+male_plot = 
+  merged_df |>
+  group_by(sex, education) |> 
+  mutate(n_obs = n()) |> 
+  filter(sex == "male") |> 
+  ggplot(aes(x = age, y = n_obs, color = education)) +
+  geom_line()
+
+male_plot
+
+
+fem_plot = 
+  merged_df |>
+  group_by(sex, education) |> 
+  mutate(n_obs = n()) |> 
+  filter(sex == "female") |> 
+  ggplot(aes(x = age, y = n_obs, color = education)) +
+  geom_line()
+
+fem_plot
+
+```
+
+Total activity
+
+```{r}
+merged_df |> 
+  group_by(seqn, phys_act) |> 
+  summarize(sum(phys_act))
+```
 

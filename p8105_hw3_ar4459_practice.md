@@ -288,7 +288,7 @@ val_2006
 
 ``` r
 val_2010 =
-   brfss_df |> 
+  brfss_df |> 
   filter(year == 2010, state == "NY") |> 
   group_by(data_value, response) |> 
   ggplot(aes(x = response, y = data_value, color = county)) +
@@ -367,3 +367,78 @@ Now, we merge the two datasets.
 ``` r
 merged_df = full_join(accel_df, covar_df, by =  "seqn")
 ```
+
+Tables for men and women
+
+``` r
+#table
+sex_df = 
+  merged_df |>
+  group_by(sex, education) |> 
+  summarize(n_obs = n()) |> 
+  pivot_wider(
+    names_from = education,
+    values_from = n_obs
+  ) |> 
+  knitr::kable()
+```
+
+    ## `summarise()` has grouped output by 'sex'. You can override using the `.groups`
+    ## argument.
+
+``` r
+#visualization
+
+male_plot = 
+  merged_df |>
+  group_by(sex, education) |> 
+  mutate(n_obs = n()) |> 
+  filter(sex == "male") |> 
+  ggplot(aes(x = age, y = n_obs, color = education)) +
+  geom_line()
+
+male_plot
+```
+
+<img src="p8105_hw3_ar4459_practice_files/figure-gfm/unnamed-chunk-16-1.png" width="90%" />
+
+``` r
+fem_plot = 
+  merged_df |>
+  group_by(sex, education) |> 
+  mutate(n_obs = n()) |> 
+  filter(sex == "female") |> 
+  ggplot(aes(x = age, y = n_obs, color = education)) +
+  geom_line()
+
+fem_plot
+```
+
+<img src="p8105_hw3_ar4459_practice_files/figure-gfm/unnamed-chunk-16-2.png" width="90%" />
+
+Total activity
+
+``` r
+merged_df |> 
+  group_by(seqn, phys_act) |> 
+  summarize(sum(phys_act))
+```
+
+    ## `summarise()` has grouped output by 'seqn'. You can override using the
+    ## `.groups` argument.
+
+    ## # A tibble: 349,275 × 3
+    ## # Groups:   seqn [250]
+    ##     seqn phys_act `sum(phys_act)`
+    ##    <dbl>    <dbl>           <dbl>
+    ##  1 62161   0.0163          0.0163
+    ##  2 62161   0.0185          0.0185
+    ##  3 62161   0.0243          0.0243
+    ##  4 62161   0.0245          0.0245
+    ##  5 62161   0.0258          0.0517
+    ##  6 62161   0.0263          0.0263
+    ##  7 62161   0.027           0.027 
+    ##  8 62161   0.0273          0.0547
+    ##  9 62161   0.0277          0.0277
+    ## 10 62161   0.0277          0.0277
+    ## # ℹ 349,265 more rows
