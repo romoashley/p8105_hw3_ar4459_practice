@@ -6,6 +6,7 @@ output: github_document
 ---
 ```{r}
 library(tidyverse)
+library(patchwork)
 
 # setting the width and height of the plots
 knitr::opts_chunk$set(
@@ -181,7 +182,13 @@ excellent_df =
   ) |> 
   ggplot(aes(x = year, y = avg_data_val, color = state)) +
   geom_line() + 
-  theme(legend.position ="bottom")
+  theme(legend.position ="right") +
+  labs(
+    title = "Average data value over time",
+    x = "Year",
+    y = "Average data value",
+    color = "State"
+  )
 
 
 excellent_df
@@ -191,34 +198,21 @@ excellent_df
 Two-panel plot
 
 ```{r}
-val_2006 =
+val_06_10 =
   brfss_df |> 
-  filter(year == 2006, state == "NY") |> 
-  group_by(data_value, response) |> 
-  ggplot(aes(x = response, y = data_value, color = county)) +
+  filter(year == 2006 | year == 2010, state == "NY") |> 
+  group_by(data_value, response, county) |> 
+  ggplot(aes(x = response, y = data_value)) +
   geom_boxplot() +
   labs(
-    title = "2006",
-    color = "Locations in NY State",
+    title = "2006 vs. 2010",
+    color = "Year",
     x = "Response",
     y = "Value"
-  )
+  ) +
+  facet_grid(. ~ year)
 
-val_2006
-
-val_2010 =
-  brfss_df |> 
-  filter(year == 2010, state == "NY") |> 
-  group_by(data_value, response) |> 
-  ggplot(aes(x = response, y = data_value, color = county)) +
-  geom_boxplot() +
-  labs(
-    title = "2010",
-    color = "Locations in NY State",
-    x = "Response",
-    y = "Value"
-  )
-
+val_06_10
 
 ```
 
@@ -287,36 +281,45 @@ sex_df =
 
 sex_df
 
-#visualization
-# one plot for each education level with male and female 
-male_plot = 
-  covar_df |>
+#visualization: one plot for each education level (male and female) 
+sex_plot = 
+  covar_df |> 
   group_by(sex, education) |> 
-  mutate(n_obs = n()) |> 
-  filter(sex == "male") |> 
-  ggplot(aes(x = age, fill = sex )) +
-  geom_density()
-
-male_plot
-
-
-fem_plot = 
-  covar_df |>
-  group_by(sex, education) |> 
-  mutate(n_obs = n()) |> 
-  filter(sex == "female") |> 
   ggplot(aes(x = age, fill = sex)) +
-  geom_density()
+  geom_density(alpha = 0.05) +
+  facet_grid(. ~ education)
 
-fem_plot
+sex_plot
 
 ```
 
-Total activity
+Total activity for each partcipant
 
 ```{r}
-merged_df |> 
-  group_by(seqn, phys_act) |> 
-  summarize(sum(phys_act))
+aggregate_plot =
+  merged_df |> 
+  group_by(seqn, age, sex, education) |> 
+  summarize(
+    total_act = sum(phys_act)) |>
+  ggplot(aes(x = age, y = total_act,  color = sex)) +
+  geom_line() +
+  geom_smooth() +
+  facet_grid(. ~ education)
+  
+aggregate_plot
+
+```
+
+24-hour activity time courses for each education level by sex
+
+```{r}
+day_act = 
+  merged_df |> 
+  group_by(education, sex) |> 
+  ggplot(aes(x = min, y = education, color = sex)) +
+  geom_line() +
+  facet_grid(. ~ education)
+
+day_act
 ```
 

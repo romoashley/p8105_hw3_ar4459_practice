@@ -19,6 +19,8 @@ library(tidyverse)
     ## ℹ Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors
 
 ``` r
+library(patchwork)
+
 # setting the width and height of the plots
 knitr::opts_chunk$set(
   fig.width = 6,
@@ -255,7 +257,13 @@ excellent_df =
   ) |> 
   ggplot(aes(x = year, y = avg_data_val, color = state)) +
   geom_line() + 
-  theme(legend.position ="bottom")
+  theme(legend.position ="right") +
+  labs(
+    title = "Average data value over time",
+    x = "Year",
+    y = "Average data value",
+    color = "State"
+  )
 
 
 excellent_df
@@ -268,38 +276,24 @@ excellent_df
 Two-panel plot
 
 ``` r
-val_2006 =
+val_06_10 =
   brfss_df |> 
-  filter(year == 2006, state == "NY") |> 
-  group_by(data_value, response) |> 
-  ggplot(aes(x = response, y = data_value, color = county)) +
+  filter(year == 2006 | year == 2010, state == "NY") |> 
+  group_by(data_value, response, county) |> 
+  ggplot(aes(x = response, y = data_value)) +
   geom_boxplot() +
   labs(
-    title = "2006",
-    color = "Locations in NY State",
+    title = "2006 vs. 2010",
+    color = "Year",
     x = "Response",
     y = "Value"
-  )
+  ) +
+  facet_grid(. ~ year)
 
-val_2006
+val_06_10
 ```
 
 <img src="p8105_hw3_ar4459_practice_files/figure-gfm/unnamed-chunk-13-1.png" width="90%" />
-
-``` r
-val_2010 =
-  brfss_df |> 
-  filter(year == 2010, state == "NY") |> 
-  group_by(data_value, response) |> 
-  ggplot(aes(x = response, y = data_value, color = county)) +
-  geom_boxplot() +
-  labs(
-    title = "2010",
-    color = "Locations in NY State",
-    x = "Response",
-    y = "Value"
-  )
-```
 
 ## Problem 3
 
@@ -389,58 +383,59 @@ sex_df
 | male   |                    27 |                     35 |                    56 |
 
 ``` r
-#visualization
-# one plot for each education level with male and female 
-male_plot = 
-  covar_df |>
+#visualization: one plot for each education level (male and female) 
+sex_plot = 
+  covar_df |> 
   group_by(sex, education) |> 
-  mutate(n_obs = n()) |> 
-  filter(sex == "male") |> 
-  ggplot(aes(x = age, fill = sex )) +
-  geom_density()
+  ggplot(aes(x = age, fill = sex)) +
+  geom_density(alpha = 0.05) +
+  facet_grid(. ~ education)
 
-male_plot
+sex_plot
 ```
 
 <img src="p8105_hw3_ar4459_practice_files/figure-gfm/unnamed-chunk-16-1.png" width="90%" />
 
-``` r
-fem_plot = 
-  covar_df |>
-  group_by(sex, education) |> 
-  mutate(n_obs = n()) |> 
-  filter(sex == "female") |> 
-  ggplot(aes(x = age, fill = sex)) +
-  geom_density()
-
-fem_plot
-```
-
-<img src="p8105_hw3_ar4459_practice_files/figure-gfm/unnamed-chunk-16-2.png" width="90%" />
-
-Total activity
+Total activity for each partcipant
 
 ``` r
-merged_df |> 
-  group_by(seqn, phys_act) |> 
-  summarize(sum(phys_act))
+aggregate_plot =
+  merged_df |> 
+  group_by(seqn, age, sex, education) |> 
+  summarize(
+    total_act = sum(phys_act)) |>
+  ggplot(aes(x = age, y = total_act,  color = sex)) +
+  geom_line() +
+  geom_smooth() +
+  facet_grid(. ~ education)
 ```
 
-    ## `summarise()` has grouped output by 'seqn'. You can override using the
-    ## `.groups` argument.
+    ## `summarise()` has grouped output by 'seqn', 'age', 'sex'. You can override
+    ## using the `.groups` argument.
 
-    ## # A tibble: 349,275 × 3
-    ## # Groups:   seqn [250]
-    ##     seqn phys_act `sum(phys_act)`
-    ##    <dbl>    <dbl>           <dbl>
-    ##  1 62161   0.0163          0.0163
-    ##  2 62161   0.0185          0.0185
-    ##  3 62161   0.0243          0.0243
-    ##  4 62161   0.0245          0.0245
-    ##  5 62161   0.0258          0.0517
-    ##  6 62161   0.0263          0.0263
-    ##  7 62161   0.027           0.027 
-    ##  8 62161   0.0273          0.0547
-    ##  9 62161   0.0277          0.0277
-    ## 10 62161   0.0277          0.0277
-    ## # ℹ 349,265 more rows
+``` r
+aggregate_plot
+```
+
+    ## `geom_smooth()` using method = 'loess' and formula = 'y ~ x'
+
+    ## Warning: Removed 22 rows containing non-finite values (`stat_smooth()`).
+
+    ## Warning: Removed 22 rows containing missing values (`geom_line()`).
+
+<img src="p8105_hw3_ar4459_practice_files/figure-gfm/unnamed-chunk-17-1.png" width="90%" />
+
+24-hour activity time courses for each education level by sex
+
+``` r
+day_act = 
+  merged_df |> 
+  group_by(education, sex) |> 
+  ggplot(aes(x = min, y = education, color = sex)) +
+  geom_line() +
+  facet_grid(. ~ education)
+
+day_act
+```
+
+<img src="p8105_hw3_ar4459_practice_files/figure-gfm/unnamed-chunk-18-1.png" width="90%" />
