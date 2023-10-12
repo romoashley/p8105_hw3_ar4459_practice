@@ -203,10 +203,11 @@ brfss_df =
     year, state = locationabbr, county = locationdesc, everything()
     ) |> 
   filter(
-    response == "Excellent" | response == "Poor"
+    response == "Poor" | response == "Fair"| response == "Good"| response == "Very good"| response == "Excellent"
     ) |> 
   mutate(
-    response = factor(response, levels = c("Poor", "Excellent")))
+    response = factor(response, levels = c("Poor", "Fair", "Good", "Very good", "Excellent"))
+    )
 ```
 
 ``` r
@@ -221,7 +222,7 @@ states_2002 =
 nrow(states_2002)
 ```
 
-    ## [1] 17
+    ## [1] 36
 
 ``` r
 #states observed at 7 or more location in 2010
@@ -235,14 +236,11 @@ states_2010 =
 nrow(states_2010)
 ```
 
-    ## [1] 30
+    ## [1] 45
 
-In 2002, 17 were observed at 7 or more locations: CO, CT, FL, HI, MA,
-MD, MI, MN, NC, NH, NJ, MY, OH, PA, RI, UT, WA.
+In 2002, 36 were observed at 7 or more locations.
 
-In 2010, 30 were observed at 7 or more locations: CA, C0, CT, FL, GA,
-HI, ID KS, LA, MA, MD, ME, MI, MN, NC, NE, NH, NJ, NM, NY, OH, OR PA,
-RI, SC, TN, TX, UT, VT, WA.
+In 2010, 45 were observed at 7 or more locations.
 
 Spaghetti plot of the average data value over time within a state.
 
@@ -251,17 +249,19 @@ excellent_df =
   brfss_df |> 
   filter(response == "Excellent") |> 
   select(year, state, data_value) |> 
-  group_by(state, data_value) |> 
+  group_by(year, state) |> 
   mutate(
    avg_data_val = mean(data_value)
   ) |> 
-  ggplot(aes(x = year, y = avg_data_val, name = state)) +
+  ggplot(aes(x = year, y = avg_data_val, color = state)) +
   geom_line() + 
   theme(legend.position ="bottom")
 
 
 excellent_df
 ```
+
+    ## Warning: Removed 65 rows containing missing values (`geom_line()`).
 
 <img src="p8105_hw3_ar4459_practice_files/figure-gfm/unnamed-chunk-12-1.png" width="90%" />
 
@@ -273,7 +273,7 @@ val_2006 =
   filter(year == 2006, state == "NY") |> 
   group_by(data_value, response) |> 
   ggplot(aes(x = response, y = data_value, color = county)) +
-  geom_point() +
+  geom_boxplot() +
   labs(
     title = "2006",
     color = "Locations in NY State",
@@ -292,18 +292,14 @@ val_2010 =
   filter(year == 2010, state == "NY") |> 
   group_by(data_value, response) |> 
   ggplot(aes(x = response, y = data_value, color = county)) +
-  geom_point() +
+  geom_boxplot() +
   labs(
     title = "2010",
     color = "Locations in NY State",
     x = "Response",
     y = "Value"
   )
-
-val_2010 
 ```
-
-<img src="p8105_hw3_ar4459_practice_files/figure-gfm/unnamed-chunk-13-2.png" width="90%" />
 
 ## Problem 3
 
@@ -331,6 +327,7 @@ accel_df = read_csv("data/nhanes_accel.csv") |>
 ``` r
 covar_df = read_csv("data/nhanes_covar.csv", skip = 4) |> 
   janitor::clean_names() |> 
+  drop_na() |> 
   mutate(
      sex = case_match(
        sex,
@@ -350,8 +347,7 @@ covar_df = read_csv("data/nhanes_covar.csv", skip = 4) |>
       levels = c("Less than high school", "High school equivalent", "More than high school")
       )
     ) |> 
-  filter(age >= "21") |> 
-  drop_na()
+  filter(age >= "21") 
 ```
 
     ## Rows: 250 Columns: 5
@@ -365,37 +361,43 @@ covar_df = read_csv("data/nhanes_covar.csv", skip = 4) |>
 Now, we merge the two datasets.
 
 ``` r
-merged_df = full_join(accel_df, covar_df, by =  "seqn")
+merged_df = left_join(accel_df, covar_df)
 ```
+
+    ## Joining with `by = join_by(seqn)`
 
 Tables for men and women
 
 ``` r
 #table
 sex_df = 
-  merged_df |>
+  covar_df |>
   group_by(sex, education) |> 
-  summarize(n_obs = n()) |> 
+  count(sex, education) |> 
   pivot_wider(
     names_from = education,
-    values_from = n_obs
+    values_from = n
   ) |> 
   knitr::kable()
+
+sex_df
 ```
 
-    ## `summarise()` has grouped output by 'sex'. You can override using the `.groups`
-    ## argument.
+| sex    | Less than high school | High school equivalent | More than high school |
+|:-------|----------------------:|-----------------------:|----------------------:|
+| female |                    28 |                     23 |                    59 |
+| male   |                    27 |                     35 |                    56 |
 
 ``` r
 #visualization
-
+# one plot for each education level with male and female 
 male_plot = 
-  merged_df |>
+  covar_df |>
   group_by(sex, education) |> 
   mutate(n_obs = n()) |> 
   filter(sex == "male") |> 
-  ggplot(aes(x = age, y = n_obs, color = education)) +
-  geom_line()
+  ggplot(aes(x = age, fill = sex )) +
+  geom_density()
 
 male_plot
 ```
@@ -404,12 +406,12 @@ male_plot
 
 ``` r
 fem_plot = 
-  merged_df |>
+  covar_df |>
   group_by(sex, education) |> 
   mutate(n_obs = n()) |> 
   filter(sex == "female") |> 
-  ggplot(aes(x = age, y = n_obs, color = education)) +
-  geom_line()
+  ggplot(aes(x = age, fill = sex)) +
+  geom_density()
 
 fem_plot
 ```
