@@ -396,46 +396,38 @@ sex_plot
 
 <img src="p8105_hw3_ar4459_practice_files/figure-gfm/unnamed-chunk-16-1.png" width="90%" />
 
-Total activity for each partcipant
+Total activity for each participant
 
 ``` r
-aggregate_plot =
-  merged_df |> 
+merged_df |> 
   group_by(seqn, age, sex, education) |> 
   summarize(
     total_act = sum(phys_act)) |>
+  drop_na() |> 
   ggplot(aes(x = age, y = total_act,  color = sex)) +
-  geom_line() +
+  geom_point() +
   geom_smooth() +
   facet_grid(. ~ education)
 ```
 
     ## `summarise()` has grouped output by 'seqn', 'age', 'sex'. You can override
     ## using the `.groups` argument.
-
-``` r
-aggregate_plot
-```
-
     ## `geom_smooth()` using method = 'loess' and formula = 'y ~ x'
-
-    ## Warning: Removed 22 rows containing non-finite values (`stat_smooth()`).
-
-    ## Warning: Removed 22 rows containing missing values (`geom_line()`).
 
 <img src="p8105_hw3_ar4459_practice_files/figure-gfm/unnamed-chunk-17-1.png" width="90%" />
 
 24-hour activity time courses for each education level by sex
 
 ``` r
-day_act = 
-  merged_df |> 
+merged_df |> 
   group_by(education, sex) |> 
-  ggplot(aes(x = min, y = education, color = sex)) +
+  drop_na() |> 
+  ggplot(aes(x = min, y = phys_act,  color = sex)) +
   geom_line() +
-  facet_grid(. ~ education)
-
-day_act
+  geom_smooth(method = "lm", alpha = 0.01) +
+  facet_grid(. ~ education) 
 ```
+
+    ## `geom_smooth()` using formula = 'y ~ x'
 
 <img src="p8105_hw3_ar4459_practice_files/figure-gfm/unnamed-chunk-18-1.png" width="90%" />

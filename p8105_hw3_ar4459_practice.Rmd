@@ -293,33 +293,29 @@ sex_plot
 
 ```
 
-Total activity for each partcipant
+Total activity for each participant
 
 ```{r}
-aggregate_plot =
-  merged_df |> 
+merged_df |> 
   group_by(seqn, age, sex, education) |> 
   summarize(
     total_act = sum(phys_act)) |>
+  drop_na() |> 
   ggplot(aes(x = age, y = total_act,  color = sex)) +
-  geom_line() +
+  geom_point() +
   geom_smooth() +
   facet_grid(. ~ education)
-  
-aggregate_plot
-
 ```
 
 24-hour activity time courses for each education level by sex
 
 ```{r}
-day_act = 
-  merged_df |> 
+merged_df |> 
   group_by(education, sex) |> 
-  ggplot(aes(x = min, y = education, color = sex)) +
+  drop_na() |> 
+  ggplot(aes(x = min, y = phys_act,  color = sex)) +
   geom_line() +
-  facet_grid(. ~ education)
-
-day_act
+  geom_smooth(method = "lm", alpha = 0.01) +
+  facet_grid(. ~ education) 
 ```
 
