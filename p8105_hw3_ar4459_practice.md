@@ -420,14 +420,13 @@ merged_df |>
 
 ``` r
 merged_df |> 
-  group_by(education, sex) |> 
   drop_na() |> 
-  ggplot(aes(x = min, y = phys_act,  color = sex)) +
-  geom_line() +
-  geom_smooth(method = "lm", alpha = 0.01) +
+  ggplot(aes(x = min, y = phys_act,  color = sex, group = seqn)) +
+  geom_line( alpha = 0.2) +
+  geom_smooth(aes(group = sex), alpha = 0.02) +
   facet_grid(. ~ education) 
 ```
 
-    ## `geom_smooth()` using formula = 'y ~ x'
+    ## `geom_smooth()` using method = 'gam' and formula = 'y ~ s(x, bs = "cs")'
 
 <img src="p8105_hw3_ar4459_practice_files/figure-gfm/unnamed-chunk-18-1.png" width="90%" />
